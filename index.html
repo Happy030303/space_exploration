@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Antariksh Yatri: Space Explorer</title>
+<title>Space Exploration</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -99,6 +99,12 @@
   @keyframes pop { 0% { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; transform: none; } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-10px); } }
 
   .menu { position: absolute; top: calc(var(--st) + 14px); right: calc(var(--sr) + 16px); display: flex; gap: 8px; }
+  .vis { display: flex; align-items: baseline; gap: 6px; padding: 10px 14px; font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+  .vis b { color: var(--star); font-weight: 700; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+  .menu-stats { display: flex; gap: 28px; margin: 6px 0 4px; font-size: 0.8rem; color: var(--muted); }
+  .menu-stats b { display: block; margin-top: 2px; font-size: 1.35rem; font-weight: 700; color: var(--star); font-variant-numeric: tabular-nums; }
+  .intro-vis { margin: 14px 0 0; font-size: 0.86rem; color: var(--muted); }
+  .intro-vis b { color: var(--o3); font-weight: 700; font-variant-numeric: tabular-nums; }
   .mbtn { padding: 10px 16px; font-size: 0.82rem; font-weight: 600; white-space: nowrap; }
   .mbtn:hover { border-color: rgba(99,199,178,0.7); background: rgba(10,30,34,0.8); }
 
@@ -239,6 +245,7 @@
     #xpPop { top: calc(var(--st) + 74px); left: calc(var(--sl) + 14px); }
     .menu { top: calc(var(--st) + 10px); right: calc(var(--sr) + 10px); gap: 6px; }
     .mbtn { padding: 9px 11px; font-size: 0.78rem; }
+    .menu .vis { display: none; }
     #toasts { top: calc(var(--st) + 96px); left: calc(var(--sl) + 10px); transform: none; align-items: flex-start; max-width: calc(100vw - 150px); min-width: 0; }
     .toast { font-size: 0.78rem; padding: 8px 11px; }
     .nav { top: calc(var(--st) + 62px); right: calc(var(--sr) + 10px); bottom: auto; width: auto; }
@@ -283,7 +290,7 @@
 'use strict';
 const HEAD_HTML = `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Antariksh Yatri: Space Explorer</title>
+<title>Space Exploration</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -314,6 +321,7 @@ const BODY_HTML = `<canvas id="c" role="img" aria-label="View from the starship 
   </button>
   <div id="xpPop" aria-hidden="true"></div>
   <div class="menu">
+    <div class="vis hp" id="visChip" hidden aria-label="Number of explorers"><b id="visCount">0</b> explorers</div>
     <button class="mbtn hp" id="adsBtn" aria-haspopup="dialog">Billboards</button>
     <button class="mbtn hp" id="menuBtn" aria-haspopup="dialog">Menu <kbd>Esc</kbd></button>
   </div>
@@ -353,6 +361,10 @@ const BODY_HTML = `<canvas id="c" role="img" aria-label="View from the starship 
 <div class="panel" id="menuPanel" hidden role="dialog" aria-modal="true" aria-labelledby="menuTitle">
   <div class="sheet menu-sheet">
     <h3 id="menuTitle">Menu</h3>
+    <div class="menu-stats" id="menuStats" hidden>
+      <div>Explorers<b id="msVisitors">0</b></div>
+      <div>Total flights<b id="msVisits">0</b></div>
+    </div>
     <div class="menu-list">
       <button class="mi primary" id="miResume" data-close>Resume flight</button>
       <button class="mi" id="miLog">Logbook <span id="miLogVal">0/24</span></button>
@@ -438,9 +450,10 @@ const BODY_HTML = `<canvas id="c" role="img" aria-label="View from the starship 
 <div id="intro">
   <div class="title-wrap">
     <p class="kicker">An endless universe to explore</p>
-    <h1>Antariksh Yatri</h1>
+    <h1>Space Exploration</h1>
     <p class="lead" id="introLead">Fly a starship through a universe that builds itself as you travel. Alien worlds, nebulae, black holes, pulsars, galaxies, and a few things science has only imagined.</p>
     <button class="launch" id="launchBtn" disabled>Building universe…</button>
+    <p class="intro-vis" id="introVis" hidden><b id="introVisNum">0</b> explorers have launched so far</p>
     <div class="ctl-grid" id="introCtl">
       <span><kbd>Drag</kbd> steer</span><span><kbd>W</kbd><kbd>S</kbd> throttle</span><span><kbd>Shift</kbd> boost</span>
       <span><kbd>F</kbd> autopilot</span><span><kbd>J</kbd> hyperjump</span><span><kbd>Esc</kbd> menu</span>
@@ -1953,7 +1966,7 @@ function renderLog() {
     grid.appendChild(d);
   });
   $('logSub').textContent = logCount() === TYPE_KEYS.length
-    ? 'You have found all 24 kinds of objects. You are a true Antariksh Yatri!'
+    ? 'You have found all 24 kinds of objects. You are a true space explorer!'
     : 'Find all 24 kinds of objects hidden in the universe. You have found ' + logCount() + ' so far. Hyperjump to new regions to find the rest.';
 }
 renderLog();
@@ -1978,6 +1991,41 @@ function discover(t) {
     addXP(100, TYPES[t.typeKey][0]);
   } else addXP(10, 'scanned');
 }
+
+/* ============ Visitor counter ============ */
+// Uses the free Abacus counting API. It works on normal web hosting (like GitHub Pages);
+// inside the claude.ai preview outside connections are blocked, so the counter simply stays hidden.
+const COUNTER_API = 'https://abacus.jasoncameron.dev';
+const COUNTER_NS = 'space-exploration-game-q7k2x9';
+async function counterCall(verb, key) {
+  const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const tm = setTimeout(() => { if (ctl) ctl.abort(); }, 7000);
+  try {
+    const r = await fetch(COUNTER_API + '/' + verb + '/' + COUNTER_NS + '/' + key, { cache: 'no-store', signal: ctl ? ctl.signal : undefined });
+    if (r.status === 404) return { missing: true };
+    if (!r.ok) return null;
+    const j = await r.json();
+    return typeof j.value === 'number' ? { value: j.value } : null;
+  } catch (e) { return null; } finally { clearTimeout(tm); }
+}
+function showVisitors(n) {
+  const txt = Number(n).toLocaleString('en-US');
+  $('visCount').textContent = txt; $('visChip').hidden = false;
+  $('introVisNum').textContent = txt; $('introVis').hidden = false;
+  $('msVisitors').textContent = txt; $('menuStats').hidden = false;
+}
+(async function countVisit() {
+  let seen = false;
+  try { seen = !!localStorage.getItem('space-exploration-visitor'); } catch (e) {}
+  let v = await counterCall(seen ? 'get' : 'hit', 'visitors');
+  if (v && v.missing) v = await counterCall('hit', 'visitors');
+  if (v && typeof v.value === 'number') {
+    if (!seen) { try { localStorage.setItem('space-exploration-visitor', '1'); } catch (e) {} }
+    showVisitors(v.value);
+    const f = await counterCall('hit', 'visits');
+    if (f && typeof f.value === 'number') $('msVisits').textContent = f.value.toLocaleString('en-US');
+  }
+})();
 
 /* ============ Toasts ============ */
 function toast(html, ms, major) {
